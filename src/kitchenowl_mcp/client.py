@@ -91,6 +91,23 @@ class KitchenOwlClient:
         r.raise_for_status()
         return r.json()
 
+    async def list_items(self) -> list[dict]:
+        url = f"{self._base}/api/household/{self._household}/item"
+        r = await self._http.get(url)
+        r.raise_for_status()
+        data = r.json()
+        return data.get("items", data) if isinstance(data, dict) else data
+
+    async def create_item(self, payload: dict) -> dict:
+        url = f"{self._base}/api/household/{self._household}/item"
+        r = await self._http.post(url, json=payload)
+        r.raise_for_status()
+        return r.json()
+
+    async def delete_recipe(self, recipe_id: int) -> None:
+        r = await self._http.delete(f"{self._base}/api/recipe/{recipe_id}")
+        r.raise_for_status()
+
     async def list_tags(self) -> list[dict]:
         url = f"{self._base}/api/household/{self._household}/tag"
         r = await self._http.get(url)
