@@ -7,9 +7,11 @@ Run on heimdall where KITCHENOWL_* env vars are set:
 
 import asyncio
 import sys
+from pathlib import Path
 
-sys.path.insert(0, "src")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
+from kitchenowl_mcp.auth import get_token
 from kitchenowl_mcp.client import KitchenOwlClient
 from kitchenowl_mcp.config import get_settings
 
@@ -44,66 +46,66 @@ CLASSIC_OMELET = {
 async def main() -> None:
     s = get_settings()
     client = KitchenOwlClient(
-        base_url=s.kitchenowl_base_url,
-        token=s.kitchenowl_api_token.get_secret_value(),
+        base_url=s.kitchenowl_api_url,
+        token=get_token(),
         household_id=s.kitchenowl_household_id,
     )
-
-    # --- delete by known IDs ---
-    for rid in STUB_IDS:
-        try:
-            await client.delete_recipe(rid)
-            print(f"deleted recipe id={rid}")
-        except Exception as e:
-            print(f"skip id={rid}: {e}")
-
-    # --- delete by name ---
-    recipes = await client.list_recipes(limit=200)
-    for r in recipes:
-        if r.get("name", "").lower() in STUB_NAMES:
+    try:
+        # --- delete by known IDs ---
+        for rid in STUB_IDS:
             try:
-                await client.delete_recipe(r["id"])
-                print(f"deleted recipe name={r['name']!r} id={r['id']}")
+                await client.delete_recipe(rid)
+                print(f"deleted recipe id={rid}")
             except Exception as e:
-                print(f"skip name={r['name']!r}: {e}")
+                print(f"skip id={rid}: {e}")
 
-    # --- create Classic Omelet ---
-    catalog = await client.list_items()
-    catalog_by_key: dict[str, dict] = {
-        key: item
-        for item in catalog
-        for key in (
-            (item.get("name") or "").lower(),
-            (item.get("default_key") or "").lower(),
-        )
-        if key
-    }
+        # --- delete by name ---
+        recipes = await client.list_recipes(limit=200)
+        for r in recipes:
+            if (r.get("name") or "").lower() in STUB_NAMES:
+                try:
+                    await client.delete_recipe(r["id"])
+                    print(f"deleted recipe name={r['name']!r} id={r['id']}")
+                except Exception as e:
+                    print(f"skip name={r['name']!r}: {e}")
 
-    items = []
-    for ing in CLASSIC_OMELET["ingredients"]:
-        lookup = ing.lower().strip()
-        resolved = catalog_by_key.get(lookup) or await client.create_item(
-            {"name": ing.strip(), "default_key": lookup.replace(" ", "_")}
-        )
-        items.append(
-            {
-                "name": resolved.get("name", ing.strip()),
-                "description": "",
-                "optional": False,
-            }
-        )
+        # --- create Classic Omelet ---
+        catalog = await client.list_items()
+        catalog_by_key: dict[str, dict] = {
+            key: item
+            for item in catalog
+            for key in (
+                (item.get("name") or "").lower(),
+                (item.get("default_key") or "").lower(),
+            )
+            if key
+        }
 
-    payload = {
-        "name": CLASSIC_OMELET["name"],
-        "description": CLASSIC_OMELET["description"],
-        "items": items,
-        "steps": [{"text": s} for s in CLASSIC_OMELET["steps"]],
-        "tags": [],
-    }
-    result = await client.create_recipe(payload)
-    print(f"created recipe id={result.get('id')} name={result.get('name')!r}")
+        items = []
+        for ing in CLASSIC_OMELET["ingredients"]:
+            lookup = ing.lower().strip()
+            resolved = catalog_by_key.get(lookup) or await client.create_item(
+                {"name": ing.strip(), "default_key": lookup.replace(" ", "_")}
+            )
+            items.append(
+                {
+                    "name": resolved.get("name", ing.strip()),
+                    "description": "",
+                    "optional": False,
+                }
+            )
 
-    await client.close()
+        payload = {
+            "name": CLASSIC_OMELET["name"],
+            "description": CLASSIC_OMELET["description"],
+            "items": items,
+            "steps": [{"text": step} for step in CLASSIC_OMELET["steps"]],
+            "tags": [],
+        }
+        result = await client.create_recipe(payload)
+        print(f"created recipe id={result.get('id')} name={result.get('name')!r}")
+    finally:
+        await client.close()
 
 
 if __name__ == "__main__":
