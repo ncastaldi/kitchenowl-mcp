@@ -35,33 +35,65 @@ async def get_recipe(recipe_id: int) -> dict:
 async def create_recipe(
     name: str,
     description: str = "",
-    ingredients: list[dict] | None = None,
+    ingredients: list[str] | None = None,
     steps: list[str] | None = None,
     tags: list[str] | None = None,
 ) -> dict:
     """Create a new recipe in KitchenOwl.
 
-    Each ingredient dict should include: name (required), amount (optional float
-    as string), unit (optional string), note (optional string).
-    Steps are plain text strings in order. Tags are tag name strings.
-    Returns the created recipe including its new id.
+    Each ingredient is a name string (e.g. ["eggs", "butter", "sugar"]).
+    The tool looks up each name in the household item catalog and creates a
+    new catalog entry if none matches. Steps are plain text strings in order.
+    Tags are tag name strings. Returns the created recipe including its new id.
     """
+    client = state.get_client()
+
+    catalog = await client.list_items() if ingredients else []
+    catalog_by_key: dict[str, dict] = {}
+    for item in catalog:
+        catalog_by_key[item.get("name", "").lower()] = item
+        catalog_by_key[item.get("default_key", "").lower()] = item
+
+    items = []
+    for idx, ingredient_name in enumerate(ingredients or []):
+        lookup_key = ingredient_name.lower().strip()
+        resolved = catalog_by_key.get(lookup_key)
+        if resolved is None:
+            resolved = await client.create_item(
+                {
+                    "name": ingredient_name.strip(),
+                    "default_key": lookup_key.replace(" ", "_"),
+                }
+            )
+        items.append(
+            {
+                "id": resolved.get("id"),
+                "name": resolved.get("name", ingredient_name),
+                "default_key": resolved.get("default_key", lookup_key),
+                "household_id": resolved.get("household_id"),
+                "icon": resolved.get("icon", ""),
+                "category_id": resolved.get("category_id"),
+                "optional": False,
+                "ordering": idx,
+                "description": "",
+            }
+        )
+
     payload: dict = {
         "name": name,
         "description": description,
-        "items": [
-            {
-                "name": ing.get("name", ""),
-                "amount": ing.get("amount", ""),
-                "unit": ing.get("unit", ""),
-                "description": (
-                    f"{ing.get('amount', '')} {ing.get('unit', '')}".strip()
-                    + (f" ({ing.get('note', '')})" if ing.get('note') else "")
-                ).strip(),
-            }
-            for ing in (ingredients or [])
-        ],
+        "items": items,
         "steps": [{"text": s} for s in (steps or [])],
         "tags": [{"name": t} for t in (tags or [])],
     }
-    return await state.get_client().create_recipe(payload)
+    return await client.create_recipe(payload)
+
+
+async def delete_recipe(recipe_id: int) -> dict:
+    """Delete a recipe by ID.
+
+    Returns confirmation with the deleted recipe_id.
+    Use search_recipes() to find the recipe_id first.
+    """
+    await state.get_client().delete_recipe(recipe_id)
+    return {"deleted_recipe_id": recipe_id}

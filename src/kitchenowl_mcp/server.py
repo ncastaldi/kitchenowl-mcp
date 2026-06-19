@@ -41,6 +41,7 @@ mcp = FastMCP("KitchenOwl", lifespan=lifespan)
 mcp.add_tool(recipes.search_recipes)
 mcp.add_tool(recipes.get_recipe)
 mcp.add_tool(recipes.create_recipe)
+mcp.add_tool(recipes.delete_recipe)
 
 # Shopping list
 mcp.add_tool(shopping.get_shopping_list)
