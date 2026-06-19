@@ -53,7 +53,11 @@ class KitchenOwlClient:
         url = f"{self._base}/api/household/{self._household}/recipe"
         r = await self._http.post(url, json=payload)
         if r.is_error:
-            detail = f" | sent: {_json.dumps(payload)}" if r.status_code == 400 else ""
+            if r.status_code == 400:
+                dumped = _json.dumps(payload)[:500]
+                detail = f" | sent: {dumped}"
+            else:
+                detail = ""
             raise Exception(
                 f"KitchenOwl {r.status_code} on POST /recipe: {r.text}{detail}"
             )
