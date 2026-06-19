@@ -23,7 +23,11 @@ class KitchenOwlClient:
         r = await self._http.get(url)
         if r.status_code >= 500:
             r.raise_for_status()
-        logger.info("KitchenOwl connection verified at %s (status %d)", self._base, r.status_code)
+        logger.info(
+            "KitchenOwl connection verified at %s (status %d)",
+            self._base,
+            r.status_code,
+        )
 
     async def list_recipes(self, search: str = "", limit: int = 50) -> list[dict]:
         url = f"{self._base}/api/household/{self._household}/recipe"
