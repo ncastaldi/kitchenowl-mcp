@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     kitchenowl_api_token: str
     kitchenowl_household_id: int = 1
     kitchenowl_default_list_id: int = 1
+    mcp_port: int = 8000
 
 
 @lru_cache(maxsize=1)

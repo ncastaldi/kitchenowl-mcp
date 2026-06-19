@@ -53,4 +53,5 @@ mcp.add_tool(meal_plan.add_meal_plan_entry)
 
 
 def main() -> None:
-    mcp.run(transport="streamable-http", host="0.0.0.0", port=8000)
+    settings = get_settings()
+    mcp.run(transport="streamable-http", host="0.0.0.0", port=settings.mcp_port)
