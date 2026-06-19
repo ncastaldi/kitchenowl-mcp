@@ -10,9 +10,21 @@ async def get_meal_plan(start_date: str, end_date: str) -> list[dict]:
     start_date and end_date inclusive, each with recipe_id, recipe name, and date.
     """
     entries = await state.get_client().get_planner()
-    return [
-        e for e in entries if start_date <= e.get("day", e.get("date", "")) <= end_date
-    ]
+    result = []
+    for e in entries:
+        cooking_date_ms = e.get("cooking_date")
+        if isinstance(cooking_date_ms, int) and cooking_date_ms > 0:
+            entry_date = datetime.datetime.fromtimestamp(
+                cooking_date_ms / 1000, tz=datetime.UTC
+            ).strftime("%Y-%m-%d")
+        else:
+            raw = e.get("date", e.get("day", ""))
+            if not isinstance(raw, str):
+                continue
+            entry_date = raw
+        if start_date <= entry_date <= end_date:
+            result.append(e)
+    return result
 
 
 async def add_meal_plan_entry(
