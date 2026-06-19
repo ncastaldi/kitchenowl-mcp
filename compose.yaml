@@ -10,7 +10,7 @@ services:
       - KITCHENOWL_DEFAULT_LIST_ID=${KITCHENOWL_DEFAULT_LIST_ID:-1}
     networks:
       - proxy-net
-      - kitchen-owl_kitchenowl-internal
+      - kitchenowl-internal
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.kitchenowl-mcp.rule=Host(`kitchenowl-mcp.castaldifamily.com`)"
@@ -21,5 +21,6 @@ services:
 networks:
   proxy-net:
     external: true
-  kitchen-owl_kitchenowl-internal:
+  kitchenowl-internal:
     external: true
+    name: kitchen-owl_kitchenowl-internal
