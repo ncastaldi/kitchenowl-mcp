@@ -54,7 +54,10 @@ async def create_recipe(
                 "name": ing.get("name", ""),
                 "amount": ing.get("amount", ""),
                 "unit": ing.get("unit", ""),
-                "description": ing.get("note", ""),
+                "description": (
+                    f"{ing.get('amount', '')} {ing.get('unit', '')}".strip()
+                    + (f" ({ing.get('note', '')})" if ing.get('note') else "")
+                ).strip(),
             }
             for ing in (ingredients or [])
         ],
