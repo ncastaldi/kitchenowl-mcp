@@ -1,4 +1,5 @@
 import logging
+import time
 
 import httpx
 
@@ -98,7 +99,7 @@ class KitchenOwlClient:
         return data
 
     async def add_planner_entry(self, payload: dict) -> dict:
-        url = f"{self._base}/api/household/{self._household}/planner"
+        url = f"{self._base}/api/household/{self._household}/planner/recipe"
         r = await self._http.post(url, json=payload)
         r.raise_for_status()
         return r.json()
@@ -124,6 +125,10 @@ class KitchenOwlClient:
         return data.get("tags", data) if isinstance(data, dict) else data
 
     async def cook_recipe(self, recipe_id: int) -> dict:
-        r = await self._http.post(f"{self._base}/api/recipe/{recipe_id}/cook")
+        cooking_date = int(time.time() * 1000)
+        url = f"{self._base}/api/household/{self._household}/planner/recipe"
+        r = await self._http.post(
+            url, json={"recipe_id": recipe_id, "cooking_date": cooking_date}
+        )
         r.raise_for_status()
         return r.json()

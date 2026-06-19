@@ -1,3 +1,5 @@
+import datetime
+
 from .. import state
 
 
@@ -25,10 +27,12 @@ async def add_meal_plan_entry(
     "lunch", or "dinner". servings is the number of people to cook for.
     Returns the created planner entry.
     """
+    cooking_dt = datetime.datetime.strptime(date, "%Y-%m-%d").replace(
+        tzinfo=datetime.UTC
+    )
     payload = {
         "recipe_id": recipe_id,
-        "day": date,
+        "cooking_date": int(cooking_dt.timestamp() * 1000),
         "yields": servings,
-        "type": meal_type,
     }
     return await state.get_client().add_planner_entry(payload)
