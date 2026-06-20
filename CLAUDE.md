@@ -58,23 +58,29 @@ kitchenowl-back  (existing KitchenOwl container)
 
 ### Done
 
-- v1 MCP server with 9 tools: `search_recipes`, `get_recipe`, `create_recipe`, `delete_recipe`, `get_shopping_list`, `add_shopping_list_items`, `clear_checked_items`, `get_meal_plan`, `add_meal_plan_entry`
-- `create_recipe` verified working — KitchenOwl recipe item schema accepts only `{name, description, optional}`; `id` and `ordering` are unknown fields and must be omitted
+- All 12 MCP tools implemented and stress-tested (v3 run: 0 failures, 15 operations):
+  - Recipes: `search_recipes`, `get_recipe`, `create_recipe`, `update_recipe`, `list_tags`, `mark_recipe_made`, `delete_recipe`
+  - Shopping: `get_shopping_list`, `add_shopping_list_items`, `clear_checked_items`
+  - Meal plan: `get_meal_plan`, `add_meal_plan_entry`
+- KitchenOwl recipe item schema confirmed: `{name, description, optional}` only — `id` and `ordering` must be omitted
+- `mark_recipe_made` sets `planned=true` and appends to `planned_cooking_dates`; no discrete cook-history log exists in the API
+- `add_meal_plan_entry` response is the updated recipe object, not a standalone planner entry; meal plan data is embedded on recipes via `planned_days` / `planned_cooking_dates`
+- Ingredient names are lowercased server-side on create (KitchenOwl behavior, not a bug)
 - Dockerfile for container deployment
 - Deployed to heimdall Compose stack
 - CI: ruff + pytest
 
 ### Not started
 
-- P1 tools: `update_recipe`, `list_tags`, `mark_recipe_made`
+- `check_shopping_item` tool (needed to fully validate `clear_checked_items` end-to-end)
 - Structured logging
 - Per-user token mapping (v2, OpenWebUI)
 
 ## Open questions
 
 1. Does KitchenOwl's API token expire? Plan assumes permanent (no refresh logic). Verify in KitchenOwl settings before prod deploy.
-2. Confirm `KITCHENOWL_DEFAULT_LIST_ID=1` is a valid list ID in the household.
-3. Confirm no Authentik middleware on the `kitchenowl-mcp` Traefik router — claude.ai sends its own auth headers and cannot pass Authentik.
+2. `get_meal_plan` regressed (TypeError) in stress test v2 and recovered in v3 with no deployment change — possible environment flakiness. Monitor across future runs; consider running it 2–3× per test cycle.
+3. Clarify `mark_recipe_made` semantics with KitchenOwl docs — current behavior (sets `planned=true`) does not obviously represent a cook-history entry.
 
 ## Decision log
 
@@ -85,4 +91,4 @@ kitchenowl-back  (existing KitchenOwl container)
 
 ---
 
-*Last updated: 2026-06-19 | Session: create_recipe debugging + delete_recipe*
+*Last updated: 2026-06-20 | Session: stress test v3 — all 12 tools passing*
