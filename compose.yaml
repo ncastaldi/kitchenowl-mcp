@@ -13,7 +13,7 @@ services:
       - kitchen-owl_kitchenowl-internal
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.kitchenowl-mcp.rule=Host(`kitchenowl-mcp.castaldifamily.com`)"
+      - "traefik.http.routers.kitchenowl-mcp.rule=Host(`kitchenowl-mcp.yourdomain.com`)"
       - "traefik.http.routers.kitchenowl-mcp.entrypoints=websecure"
       - "traefik.http.routers.kitchenowl-mcp.tls.certresolver=cloudflare"
       - "traefik.http.services.kitchenowl-mcp.loadbalancer.server.port=8000"
