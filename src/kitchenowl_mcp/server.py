@@ -36,25 +36,7 @@ async def lifespan(server: FastMCP) -> AsyncGenerator[None, None]:
 
 
 def _build_server() -> FastMCP:
-    settings = get_settings()
-    auth = None
-    if settings.require_oauth:
-        from fastmcp.server.auth.providers.google import GoogleProvider
-
-        if not settings.oauth_client_id or not settings.oauth_client_secret or not settings.oauth_base_url:
-            raise ValueError(
-                "OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, and OAUTH_BASE_URL are required when REQUIRE_OAUTH=true"
-            )
-        auth = GoogleProvider(
-            client_id=settings.oauth_client_id,
-            client_secret=settings.oauth_client_secret,
-            base_url=settings.oauth_base_url,
-        )
-        logger.info(
-            "OAuth enabled via GoogleProvider (base_url=%s)", settings.oauth_base_url
-        )
-
-    server = FastMCP("KitchenOwl", lifespan=lifespan, auth=auth)
+    server = FastMCP("KitchenOwl", lifespan=lifespan)
 
     # Recipes
     server.add_tool(recipes.search_recipes)

@@ -12,12 +12,6 @@ class Settings(BaseSettings):
     kitchenowl_default_list_id: int = 1
     mcp_port: int = 8000
 
-    # OAuth (required when deploying for Gemini Enterprise)
-    require_oauth: bool = False
-    oauth_client_id: str = ""
-    oauth_client_secret: str = ""
-    oauth_base_url: str = ""
-
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
