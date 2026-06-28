@@ -26,4 +26,4 @@ pytest -v
 - Test functions are named `test_{what_it_does}`
 - Use fixtures in `conftest.py` for shared setup
 - Tests must pass before any PR is merged — CI enforces this
-- Import tests run with `APP_ENV=test` (no real KitchenOwl connection needed)
+- Import tests pass without a running KitchenOwl instance — they avoid calling `get_settings()` or making any HTTP calls

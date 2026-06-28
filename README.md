@@ -46,7 +46,7 @@ cp .env.example .env
 pip install -e ".[dev]"
 
 # 4. Run the server
-python -m kitchenowl_mcp
+kitchenowl-mcp
 ```
 
 The server listens on port 8000 (streamable-http transport).
